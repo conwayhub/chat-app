@@ -1,8 +1,8 @@
-const path = require("path");
-const express = require("express");
-const http = require("http");
-const socketio = require("socket.io");
-const axios = require("axios");
+const path = require('path');
+const express = require('express');
+const http = require('http');
+const socketio = require('socket.io');
+const formatMessage = require('./utils');
 
 const app = express();
 const server = http.createServer(app);
@@ -10,23 +10,28 @@ const io = socketio(server);
 
 const PORT = 3000 || process.env.PORT;
 
+const botName = 'bot';
+
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "../frontEnd")));
+app.use(express.static(path.join(__dirname, '../frontEnd')));
 
-//run when client connects
-io.on("connection", socket => {
-  //welcome user
-  socket.emit("message", "welcome to chat-app");
-  //broadcast when user connects
-  socket.broadcast.emit("message", "a user has joined the chat");
-  //runs when user disconnects
-  socket.on("disconnect", () => {
-    io.emit("message", "A user has left the chat");
-  });
+io.on('connection', socket => {
+  socket.on('join', ({ username }) => {
+    socket.emit('message', formatMessage(botName, 'welcome to chat app'));
 
-  //listen for chatMessage
-  socket.on("chatMessage", msg => {
-    io.emit("message", msg);
+    socket.broadcast.emit(
+      'message',
+      formatMessage(botName, `${username} has joined the chat`)
+    );
+    socket.on('chatMessage', msg => {
+      io.emit('message', formatMessage(`${username}`, msg));
+    });
+    socket.on('disconnect', () => {
+      io.emit(
+        'message',
+        formatMessage(botName, `${username} has left the chat`)
+      );
+    });
   });
 });
 
