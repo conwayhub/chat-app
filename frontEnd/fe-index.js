@@ -1,27 +1,24 @@
-const chatForm = document.getElementById("chat-form");
+const chatForm = document.getElementById('chat-form');
 const socket = io();
 
-//message from server
-socket.on("message", message => {
-  console.log(message);
+const { username } = Qs.parse(location.search, { ignoreQueryPrefix: true });
+socket.emit('join', { username });
+
+socket.on('message', message => {
   outputMessage(message);
 });
 
-//message submit
-chatForm.addEventListener("submit", e => {
+chatForm.addEventListener('submit', e => {
   e.preventDefault();
 
-  //gets message text
   const msg = e.target.elements.msg.value;
 
-  //sends message to server
-  socket.emit("chatMessage", msg);
+  socket.emit('chatMessage', msg);
 });
 
-//output message to page
 function outputMessage(message) {
-  const div = document.createElement("div");
-  div.classList.add("message");
-  div.innerHTML = `<p class=text>${message}</p>`;
-  document.querySelector(".chat-messages-output").appendChild(div);
+  const div = document.createElement('div');
+  div.classList.add('message');
+  div.innerHTML = `<p>${message.time}</p><p class=text><span>${message.username}:</span>${message.message}</p>`;
+  document.querySelector('.chat-messages-output').appendChild(div);
 }
